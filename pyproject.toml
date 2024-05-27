@@ -27,6 +27,10 @@ build-backend = "hatchling.build"
 managed = true
 dev-dependencies = ["ruff>=0.4.5"]
 
+[tool.rye.scripts]
+enxitry = "reflex run"
+enxitry-dev = "reflex run --env dev"
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
