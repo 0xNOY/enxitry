@@ -267,7 +267,7 @@ def members() -> rx.Component:
         ),
         rx.vstack(
             rx.flex(
-                rx.heading("在室者一覧", size="8"),
+                rx.heading("在室管理システム", size="7"),
                 rx.badge(
                     rx.flex(
                         rx.text("カードリーダー"),
@@ -286,6 +286,11 @@ def members() -> rx.Component:
                 direction="row",
                 spacing="9",
             ),
+            rx.text(
+                "授業外でロボラボを利用する際は、入退出時にカードリーダへ学生証をかざしてください。",
+                size="5",
+            ),
+            rx.heading("在室者一覧", size="6"),
             rx.data_table(
                 data=State.students,
             ),
