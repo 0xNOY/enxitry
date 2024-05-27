@@ -17,6 +17,8 @@ class Config(BaseSettings):
     gsheets_service_account_file: Path = data_dir / "gsheets-cred.json"
     gsheets_url: str = ""
 
+    slack_webhook_url: str = ""
+
     nfc_device_index: int = 0
     nfc_reading_interval: float = 0.1
 
