@@ -33,7 +33,7 @@ class FelicaReader:
         data, sw1, sw2 = connection.transmit(command)
         connection.disconnect()
 
-        if sw1 == 0x90 and sw2 == 0x00:
+        if sw1 == 0x90 and sw2 == 0x00 and len(data) == 8:
             return toHexString(data)
 
         print(f"NFC APDU Failed. SW1: {sw1}, SW2: {sw2}")
