@@ -97,7 +97,7 @@ class State(rx.State):
         ocr_reader = CardOCR()
 
         start_time = time.time()
-        while time.time() - start_time < CONFIG.ocr_timeout:
+        while (dur := time.time() - start_time) < CONFIG.ocr_timeout:
             info = ocr_reader.find_card_info()
             if info:
                 break
@@ -106,7 +106,7 @@ class State(rx.State):
                     self.camera_image = PIL.Image.fromarray(
                         cv2.cvtColor(ocr_reader.last_frame, cv2.COLOR_BGR2RGB)
                     )
-            await sleep(0.001)
+            await sleep(max(0.001, 1 / max(1, dur)))
 
         async with self:
             self.is_open_register_dialog_1 = False
