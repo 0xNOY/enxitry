@@ -108,7 +108,7 @@ class State(rx.State):
                     self.camera_image = PIL.Image.fromarray(
                         cv2.cvtColor(ocr_reader.last_frame, cv2.COLOR_BGR2RGB)
                     )
-            await sleep(max(0.001, ocr_time / max(1, dur)))
+            await sleep(max(0.001, ocr_time))
 
         async with self:
             self.is_open_register_dialog_1 = False
