@@ -7,6 +7,7 @@ import reflex as rx
 import pandas as pd
 import PIL
 import cv2
+import reflex.components as rxc
 
 
 from enxitry.config import CONFIG
@@ -22,7 +23,7 @@ from enxitry.card import FelicaReader, CardOCR
 
 
 nfc_reader = FelicaReader()
-page_open_count = 0
+background_session_id = 0
 
 
 class NFCStatus(Enum):
@@ -56,11 +57,11 @@ class State(rx.State):
 
     @rx.background
     async def watch_table(self):
-        global page_open_count
+        global background_session_id
 
-        watcher_cls = page_open_count
+        watcher_cls = background_session_id
 
-        while watcher_cls == page_open_count:
+        while watcher_cls == background_session_id:
             df = self._update_table()
             async with self:
                 self.students = df
@@ -172,14 +173,14 @@ class State(rx.State):
 
     @rx.background
     async def watch_nfc(self):
-        global page_open_count
+        global background_session_id
 
-        watcher_cls = page_open_count
+        watcher_cls = background_session_id
 
         async with self:
             self.set_nfc_status(NFCStatus.READY)
 
-        while watcher_cls == page_open_count:
+        while watcher_cls == background_session_id:
             idm = await self.get_idm(1, False)
             if idm is None:
                 continue
@@ -197,16 +198,29 @@ class State(rx.State):
             if student.status == StudentStatus.ENTERED:
                 action = LogAction.EXIT
                 student.status = StudentStatus.EXITED
+
+                df = self.students
+                df.drop(student.sid, inplace=True)
+
+                yield rxc.toast.success(
+                    f"{student.name}さん、お疲れ様です!",
+                )
                 async with self:
-                    df = self.students
-                    df.drop(student.sid, inplace=True)
                     self.students = df
             else:
                 action = LogAction.ENTER
                 student.status = StudentStatus.ENTERED
+
+                df = self.students
+                df.at[student.sid, "氏名"] = student.name
+
+                yield rxc.toast.success(
+                    f"{student.name}さん、こんにちは!",
+                )
+
                 async with self:
-                    df = self.students
-                    df.at[student.sid, "氏名"] = student.name
+                    self.last_action_sname = student.name
+                    self.is_open_exit_greeting_toast = True
                     self.students = df
 
             DefaultStudentsTable().update([student])
@@ -215,13 +229,14 @@ class State(rx.State):
             async with self:
                 self.set_nfc_status(NFCStatus.READY)
 
-    def increment_open_count(self):
-        global page_open_count
-        page_open_count += 1
+    def increment_background_session_id(self):
+        global background_session_id
+        background_session_id += 1
 
 
 @rx.page(
-    on_load=[State.increment_open_count, State.watch_table, State.watch_nfc], route="/"
+    on_load=[State.increment_background_session_id, State.watch_table, State.watch_nfc],
+    route="/",
 )
 def members() -> rx.Component:
     return rx.container(
