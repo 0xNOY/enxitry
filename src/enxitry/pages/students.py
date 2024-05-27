@@ -202,7 +202,7 @@ class State(rx.State):
                 df = self.students
                 df.drop(student.sid, inplace=True)
 
-                yield rxc.toast.success(
+                yield rxc.toast.info(
                     f"{student.name}さん、お疲れ様です!",
                 )
                 async with self:
