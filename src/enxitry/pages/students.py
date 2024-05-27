@@ -267,7 +267,7 @@ def members() -> rx.Component:
         ),
         rx.vstack(
             rx.flex(
-                rx.heading("在室管理システム", size="7"),
+                rx.heading("在室管理システム (ベータ)", size="7"),
                 rx.badge(
                     rx.flex(
                         rx.text("カードリーダー"),
