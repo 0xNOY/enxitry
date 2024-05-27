@@ -28,7 +28,7 @@ managed = true
 dev-dependencies = ["ruff>=0.4.5"]
 
 [tool.rye.scripts]
-enxitry = "reflex run"
+enxitry = "reflex run --env prod"
 enxitry-dev = "reflex run --env dev"
 
 [tool.hatch.metadata]
