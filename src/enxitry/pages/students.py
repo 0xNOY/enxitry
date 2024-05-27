@@ -229,7 +229,8 @@ def members() -> rx.Component:
             rx.dialog.content(
                 rx.dialog.title("初めまして!"),
                 rx.dialog.description(
-                    "まずはカメラに学生証をかざして、学籍番号と氏名を教えてください。"
+                    "まずはカメラに学生証をかざして、学籍番号と氏名を教えてください。",
+                    size="5",
                 ),
                 rx.image(src=State.camera_image, alt="カメラ画像"),
             ),
@@ -239,7 +240,8 @@ def members() -> rx.Component:
             rx.dialog.content(
                 rx.dialog.title("読み取りに成功しました!"),
                 rx.dialog.description(
-                    f"以下の情報が正しければ、{CONFIG.ocr_info_valid_timeout}秒以内にNFCリーダに学生証をかざしてください。"
+                    f"以下の情報が正しければ、{CONFIG.ocr_info_valid_timeout}秒以内にNFCリーダに学生証をかざしてください。",
+                    size="5",
                 ),
                 rx.data_table(data=State.recognized_info, columns=["学籍番号", "氏名"]),
                 rx.flex(
@@ -260,7 +262,8 @@ def members() -> rx.Component:
             rx.dialog.content(
                 rx.dialog.title("登録が完了しました!"),
                 rx.dialog.description(
-                    "現在あなたの状態は在室になっています。退出時はNFCリーダに学生証をかざしてください。"
+                    "現在あなたの状態は在室になっています。退出時はNFCリーダに学生証をかざしてください。",
+                    size="5",
                 ),
             ),
             open=State.is_open_register_dialog_3,
