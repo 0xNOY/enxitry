@@ -97,17 +97,14 @@ class State(rx.State):
         ocr_reader = CardOCR()
 
         start_time = time.time()
-        counter_ocr = 0
         while time.time() - start_time < CONFIG.ocr_timeout:
             info = ocr_reader.find_card_info()
             if info:
                 break
-            if ocr_reader.last_frame is not None and counter_ocr % 4 == 0:
-                async with self:
-                    self.camera_image = PIL.Image.fromarray(
-                        cv2.cvtColor(ocr_reader.last_frame, cv2.COLOR_BGR2RGB)
-                    )
-            counter_ocr += 1
+            async with self:
+                self.camera_image = PIL.Image.fromarray(
+                    cv2.cvtColor(ocr_reader.last_frame, cv2.COLOR_BGR2RGB)
+                )
             await sleep(0.001)
 
         async with self:
