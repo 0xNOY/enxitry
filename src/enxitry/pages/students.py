@@ -254,20 +254,16 @@ def members() -> rx.Component:
             rx.dialog.content(
                 rx.dialog.title("読み取りに成功しました!"),
                 rx.dialog.description(
-                    f"以下の情報が正しければ、{CONFIG.ocr_info_valid_timeout}秒以内にNFCリーダに学生証をかざしてください。",
+                    "以下の",
+                    rx.text.strong("情報が正しければ"),
+                    f"、{CONFIG.ocr_info_valid_timeout}秒以内にNFCリーダに学生証をかざしてください。",
                     size="5",
                 ),
                 rx.data_table(data=State.recognized_info, columns=["学籍番号", "氏名"]),
-                rx.flex(
-                    rx.text("タイムアウトまで: "),
-                    rx.progress(
-                        value=CONFIG.ocr_info_valid_timeout
-                        - State.ocr_info_valid_time_prog,
-                        max=CONFIG.ocr_info_valid_timeout,
-                    ),
-                    direction="row",
-                    spacing="2",
-                    align="center",
+                rx.progress(
+                    value=CONFIG.ocr_info_valid_timeout
+                    - State.ocr_info_valid_time_prog,
+                    max=CONFIG.ocr_info_valid_timeout,
                 ),
             ),
             open=State.is_open_register_dialog_2,
