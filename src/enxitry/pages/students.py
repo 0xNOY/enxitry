@@ -22,6 +22,7 @@ from enxitry.models import (
     LogAction,
 )
 from enxitry.card import FelicaReader, ocr
+from enxitry import slack
 
 
 nfc_reader = FelicaReader()
@@ -202,6 +203,8 @@ class State(rx.State):
         async with self:
             self.students = df
 
+        slack.send_message(f"{student.name}さんが新規登録しました。")
+
         delay = CONFIG.registration_completion_display_time - (time.time() - start_time)
         if delay > 0:
             await sleep(delay)
@@ -251,6 +254,8 @@ class State(rx.State):
                 )
                 async with self:
                     self.students = df
+
+                slack.send_message(f"{student.name}さんが退出しました。")
             else:
                 action = LogAction.ENTER
                 student.status = StudentStatus.ENTERED
@@ -263,9 +268,9 @@ class State(rx.State):
                 )
 
                 async with self:
-                    self.last_action_sname = student.name
-                    self.is_open_exit_greeting_toast = True
                     self.students = df
+
+                slack.send_message(f"{student.name}さんが入室しました。")
 
             DefaultStudentsTable().update([student])
             DefaultLogTable().update([Log.create(student.sid, action)])
