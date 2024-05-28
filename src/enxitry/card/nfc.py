@@ -1,6 +1,7 @@
 from smartcard.System import readers as get_readers
 from smartcard.Exceptions import NoCardException
 from smartcard.util import toHexString
+from loguru import logger
 
 from enxitry.config import CONFIG
 
@@ -26,7 +27,7 @@ class FelicaReader:
         except NoCardException:
             return None
         except Exception as e:
-            print("NFC Unexpected error:", e)
+            logger.error(f"Failed to connect to NFC: {e}")
             return None
 
         command = [0xFF, 0xCA, 0x00, 0x00, 0x00]
@@ -36,6 +37,6 @@ class FelicaReader:
         if sw1 == 0x90 and sw2 == 0x00 and len(data) == 8:
             return toHexString(data)
 
-        print(f"NFC APDU Failed. SW1: {sw1}, SW2: {sw2}")
+        logger.error(f"NFC APDU Failed. SW1: {sw1}, SW2: {sw2}")
 
         return None
