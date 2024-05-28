@@ -8,6 +8,7 @@ import pandas as pd
 import PIL
 import cv2
 import reflex.components as rxc
+from loguru import logger
 
 
 from enxitry.config import CONFIG
@@ -189,7 +190,13 @@ class State(rx.State):
 
             student = DefaultStudentsTable().get_by_idm(idm)
             if not student:
-                await self.register_student(idm)
+                try:
+                    await self.register_student(idm)
+                except Exception as e:
+                    logger.error(f"Failed to register student: {e}")
+                    yield rxc.toast.error(
+                        "学生の登録に失敗しました。もう一度試してください。",
+                    )
                 async with self:
                     self.set_nfc_status(NFCStatus.READY)
                 continue
