@@ -32,6 +32,7 @@ class Config(BaseSettings):
     delay_before_ocr: int = 5
     ocr_timeout: int = 45
     ocr_info_valid_timeout: int = 10
+    size_displayed_camera_image: int = 256
 
     registration_completion_display_time: int = 5
 

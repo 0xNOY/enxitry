@@ -102,7 +102,12 @@ class State(rx.State):
             ret, frame = ocr_reader._camera.read()
             if not ret or frame is None:
                 continue
-            frame = PIL.Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            factor = min(1, CONFIG.size_displayed_camera_image / max(frame.shape[:2]))
+            frame = PIL.Image.fromarray(
+                cv2.cvtColor(
+                    cv2.resize(frame, (0, 0), fx=factor, fy=factor), cv2.COLOR_BGR2RGB
+                )
+            )
             async with self:
                 self.camera_image = frame
             await sleep(1 / 16)
@@ -112,10 +117,16 @@ class State(rx.State):
             info = ocr_reader.find_card_info()
             if info:
                 break
-            async with self:
-                self.camera_image = PIL.Image.fromarray(
-                    cv2.cvtColor(ocr_reader.last_frame, cv2.COLOR_BGR2RGB)
+
+            frame = ocr_reader.last_frame
+            factor = min(1, CONFIG.size_displayed_camera_image / max(frame.shape[:2]))
+            frame = PIL.Image.fromarray(
+                cv2.cvtColor(
+                    cv2.resize(frame, (0, 0), fx=factor, fy=factor), cv2.COLOR_BGR2RGB
                 )
+            )
+            async with self:
+                self.camera_image = frame
             await sleep(0.001)
 
         async with self:
