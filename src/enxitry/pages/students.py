@@ -1,6 +1,7 @@
 from asyncio import sleep, create_task
 from enum import Enum
 import time
+from threading import Thread
 
 import PIL.Image
 import reflex as rx
@@ -20,7 +21,7 @@ from enxitry.models import (
     Log,
     LogAction,
 )
-from enxitry.card import FelicaReader, CardOCR
+from enxitry.card import FelicaReader, ocr
 
 
 nfc_reader = FelicaReader()
@@ -95,11 +96,12 @@ class State(rx.State):
         async with self:
             self.is_open_register_dialog_1 = True
 
-        ocr_reader = CardOCR()
+        camera = cv2.VideoCapture(CONFIG.ocr_camera_index)
+        cam_fps = camera.get(cv2.CAP_PROP_FPS)
 
         start_time = time.time()
         while time.time() - start_time < CONFIG.delay_before_ocr:
-            ret, frame = ocr_reader._camera.read()
+            ret, frame = camera.read()
             if not ret or frame is None:
                 continue
             factor = min(1, CONFIG.size_displayed_camera_image / max(frame.shape[:2]))
@@ -110,15 +112,30 @@ class State(rx.State):
             )
             async with self:
                 self.camera_image = frame
-            await sleep(1 / 16)
+            await sleep(1 / cam_fps)
 
         start_time = time.time()
+        ocr_thread = None
         while time.time() - start_time < CONFIG.ocr_timeout:
-            info = ocr_reader.find_card_info()
-            if info:
-                break
+            ret, frame = camera.read()
+            if not ret or frame is None:
+                continue
 
-            frame = ocr_reader.last_frame
+            if ocr_thread is not None and not ocr_thread.is_alive():
+                ocr_thread.join()
+                info = ocr_thread.result
+                if info:
+                    break
+                ocr_thread = None
+
+            if ocr_thread is None:
+                ocr_thread = Thread(
+                    target=lambda: setattr(
+                        ocr_thread, "result", ocr.find_card_info(frame)
+                    )
+                )
+                ocr_thread.start()
+
             factor = min(1, CONFIG.size_displayed_camera_image / max(frame.shape[:2]))
             frame = PIL.Image.fromarray(
                 cv2.cvtColor(
@@ -127,13 +144,11 @@ class State(rx.State):
             )
             async with self:
                 self.camera_image = frame
-            await sleep(0.001)
+            await sleep(1 / cam_fps)
 
         async with self:
             self.is_open_register_dialog_1 = False
             self.camera_image = None
-
-        del ocr_reader
 
         if not info:
             return

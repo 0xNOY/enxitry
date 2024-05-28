@@ -10,6 +10,9 @@ from paddleocr_onnx.pocr_onnx import PPOCR_DIR
 from enxitry.config import CONFIG
 
 
+_default_ocr: PaddleOcrONNX | None = None
+
+
 @dataclass
 class InfoWrittenOnCard:
     """
@@ -24,85 +27,50 @@ class InfoWrittenOnCard:
     student_name: str
 
 
-class CardOCR:
+def get_default_ocr() -> PaddleOcrONNX:
     """
-    学生証に書かれた情報を読み取るOCRクラス
+    デフォルトのOCRインスタンスを取得する
 
-    Attributes:
-        camera_rotation (Literal[0, 90, 180, 270]): カメラの回転角度
-        last_frame (np.ndarray | None): 最後に読み取ったフレーム
+    Returns:
+        PaddleOcrONNX: OCRインスタンス
     """
-
-    def __init__(
-        self,
-        camera_index: int = CONFIG.ocr_camera_index,
-    ):
-        """
-        Args:
-            camera_index (int): カメラのインデックス
-        """
+    global _default_ocr
+    if _default_ocr is None:
         param = get_paddleocr_parameter()
         param.rec_model_dir = PPOCR_DIR / "model/rec_model/en_PP-OCRv3_rec_infer.onnx"
         param.rec_image_shape = "3, 48, 320"
-        self._ocr = PaddleOcrONNX(param)
+        _default_ocr = PaddleOcrONNX(param)
+    return _default_ocr
 
-        self._camera = cv2.VideoCapture(camera_index)
 
-        self.camera_rotation: Literal[0, 90, 180, 270] = CONFIG.ocr_camera_rotation
-        self.last_frame: np.ndarray | None = None
+def unload_default_ocr():
+    """
+    デフォルトのOCRインスタンスを解放する
+    """
+    global _default_ocr
+    _default_ocr = None
 
-    def __del__(self):
-        self._camera.release()
 
-    def find_card_info(self) -> InfoWrittenOnCard | None:
-        """
-        学生証に書かれた情報を読み取る
+def find_card_info(img: cv2.Mat) -> InfoWrittenOnCard | None:
+    """
+    学生証に書かれた情報を読み取る
 
-        Returns:
-            InfoWrittenOnCard | None: 読み取った情報。読み取れなかった場合はNone。
-        """
-        ret, frame = self._camera.read()
-        if not ret or frame is None:
-            return None
+    Args:
+        img (cv2.Mat): 画像
 
-        self.last_frame = frame
+    Returns:
+        InfoWrittenOnCard | None: 読み取った情報。読み取れなかった場合はNone。
+    """
+    ocr = get_default_ocr()
+    bboxes, texts, time = ocr(img)
 
-        if self.camera_rotation != 0:
-            frame = cv2.rotate(frame, self.camera_rotation)
+    sid = None
+    for box, (text, score) in zip(bboxes, texts):
+        if sid is None:
+            if text.isdigit() and len(text) == 9:
+                sid = text
+        else:
+            if "," in text:  # カンマを含む文字列を氏名として扱う
+                return InfoWrittenOnCard(sid, text)
 
-        bboxes, texts, time = self._ocr(frame)
-
-        sid = None
-        for box, (text, score) in zip(bboxes, texts):
-            if sid is None:
-                if text.isdigit() and len(text) == 9:
-                    sid = text
-            else:
-                if "," in text:  # カンマを含む文字列を氏名として扱う
-                    return InfoWrittenOnCard(sid, text)
-
-        return None
-
-    def find_card_info_with_timeout(
-        self, timeout_sec: float = 0
-    ) -> InfoWrittenOnCard | None:
-        """
-        学生証に書かれた情報を読み取る
-
-        Args:
-            timeout_sec (float): 読み取りを試みる最大時間（秒）。0以下の場合は1回だけ試みる。
-
-        Returns:
-            InfoWrittenOnCard | None: 読み取った情報。読み取れなかった場合はNone。
-        """
-
-        if timeout_sec <= 0:
-            return self.find_card_info()
-
-        start_time = time()
-        while time() - start_time < timeout_sec:
-            info = self.find_card_info()
-            if info is not None:
-                return info
-
-        return None
+    return None
