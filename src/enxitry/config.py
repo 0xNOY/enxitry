@@ -29,12 +29,12 @@ class Config(BaseSettings):
 
     ocr_camera_index: int = 0
     ocr_camera_rotation: int = 0
-    delay_before_ocr: int = 8
+    delay_before_ocr: int = 3
     ocr_timeout: int = 30
     ocr_info_valid_timeout: int = 10
     size_displayed_camera_image: int = 256
 
-    registration_completion_display_time: int = 5
+    registration_completion_display_time: int = 3
 
     students_table_update_interval: float = 15
 
