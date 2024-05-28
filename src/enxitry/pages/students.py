@@ -96,7 +96,7 @@ class State(rx.State):
         async with self:
             self.is_open_register_dialog_1 = True
 
-        camera = cv2.VideoCapture(CONFIG.ocr_camera_index)
+        camera = ocr.get_default_camera()
         cam_fps = camera.get(cv2.CAP_PROP_FPS)
 
         start_time = time.time()
@@ -149,6 +149,8 @@ class State(rx.State):
         async with self:
             self.is_open_register_dialog_1 = False
             self.camera_image = None
+
+        ocr.unload_default_camera()
 
         if not info:
             return

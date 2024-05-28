@@ -11,6 +11,7 @@ from enxitry.config import CONFIG
 
 
 _default_ocr: PaddleOcrONNX | None = None
+_default_camera: cv2.VideoCapture | None = None
 
 
 @dataclass
@@ -49,6 +50,29 @@ def unload_default_ocr():
     """
     global _default_ocr
     _default_ocr = None
+
+
+def get_default_camera() -> cv2.VideoCapture:
+    """
+    デフォルトのカメラインスタンスを取得する
+
+    Returns:
+        cv2.VideoCapture: カメラインスタンス
+    """
+    global _default_camera
+    if _default_camera is None or not _default_camera.isOpened():
+        _default_camera = cv2.VideoCapture(CONFIG.ocr_camera_index)
+    return _default_camera
+
+
+def unload_default_camera():
+    """
+    デフォルトのカメラインスタンスを解放する
+    """
+    global _default_camera
+    if _default_camera is not None:
+        _default_camera.release()
+    _default_camera = None
 
 
 def find_card_info(img: cv2.Mat) -> InfoWrittenOnCard | None:
