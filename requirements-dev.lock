@@ -115,6 +115,8 @@ keyring==25.2.1
     # via twine
 lazy-loader==0.4
     # via scikit-image
+loguru==0.7.2
+    # via enxitry
 mako==1.3.5
     # via alembic
 markdown-it-py==3.0.0

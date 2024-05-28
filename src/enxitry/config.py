@@ -16,6 +16,7 @@ class Config(BaseSettings):
 
     gsheets_service_account_file: Path = data_dir / "gsheets-cred.json"
     gsheets_url: str = ""
+    gsheets_error_retries: int = 3
 
     slack_webhook_url: str = ""
 

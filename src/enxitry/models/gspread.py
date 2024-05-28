@@ -5,6 +5,9 @@ import pandas as pd
 from pydantic import BaseModel
 from gspread_pandas import Spread
 from gspread_pandas.conf import get_config
+from loguru import logger
+
+from enxitry.config import CONFIG
 
 
 class GSpreadTable[T]:
@@ -13,7 +16,7 @@ class GSpreadTable[T]:
     def __init__(
         self,
         model: T,
-        spreads_url: str,
+        spread_url: str,
         service_account_file: Path,
         sheet_name: str = "",
         index_col: str = "",
@@ -21,7 +24,7 @@ class GSpreadTable[T]:
         """
         Args:
             model (T): モデルとなるデータクラス。pydantic.BaseModelを継承している必要がある。
-            spreads_url (str): スプレッドシートのURL
+            spread_url (str): スプレッドシートのURL
             service_account_file (Path): サービスアカウントファイル
             sheet_name (str): シート名。空文字列の場合はモデル名が利用される。
             index_col (str): インデックスとするフィールド名。空文字列の場合はモデルの最初に定義されたフィールドが利用される。
@@ -36,11 +39,20 @@ class GSpreadTable[T]:
         self._index_col = index_col
         self._model = model
 
-        conf = get_config(service_account_file.parent, service_account_file.name)
+        self._gspread_conf = get_config(
+            service_account_file.parent, service_account_file.name
+        )
+
+        self._spread_url = spread_url
+        self._sheet_name = sheet_name
+
+        self._open_spread()
+
+    def _open_spread(self):
         self._spread = Spread(
-            spreads_url,
-            sheet=sheet_name,
-            config=conf,
+            self._spread_url,
+            sheet=self._sheet_name,
+            config=self._gspread_conf,
             create_sheet=True,
         )
 
@@ -63,8 +75,18 @@ class GSpreadTable[T]:
         Returns:
             pd.DataFrame: データベースの内容
         """
+        df = None
+        for _ in range(CONFIG.gsheets_error_retries):
+            try:
+                df = self._spread.sheet_to_df()
+                break
+            except Exception as e:
+                logger.error(f"Failed to read sheet: {e}")
+                self._open_spread()
 
-        df = self._spread.sheet_to_df()
+        if df is None:
+            raise Exception("Failed to read sheet")
+
         if df.empty:
             df = self._model_df()
         return df
@@ -111,7 +133,16 @@ class GSpreadTable[T]:
             row_dict = row.model_dump()
             index = row.__getattribute__(self._index_col)
             df.loc[index] = row_dict
-        self._spread.df_to_sheet(df)
+
+        for _ in range(CONFIG.gsheets_error_retries):
+            try:
+                self._spread.df_to_sheet(df)
+                return
+            except Exception as e:
+                logger.error(f"Failed to write sheet: {e}")
+                self._open_spread()
+
+        raise Exception("Failed to write sheet")
 
     def delete(self, indexes: list[str]):
         """
@@ -122,4 +153,13 @@ class GSpreadTable[T]:
         """
         df = self.get_all_as_df()
         df.drop(indexes, inplace=True)
-        self._spread.df_to_sheet(df, replace=True)
+
+        for _ in range(CONFIG.gsheets_error_retries):
+            try:
+                self._spread.df_to_sheet(df, replace=True)
+                return
+            except Exception as e:
+                logger.error(f"Failed to write sheet: {e}")
+                self._open_spread()
+
+        raise Exception("Failed to write sheet")

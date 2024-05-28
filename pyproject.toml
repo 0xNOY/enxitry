@@ -15,6 +15,7 @@ dependencies = [
     "cuid2>=2.0.1",
     "pillow>=10.3.0",
     "pytz>=2024.1",
+    "loguru>=0.7.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
