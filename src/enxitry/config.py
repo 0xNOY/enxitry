@@ -12,6 +12,10 @@ class Config(BaseSettings):
     data_dir: Path = Path("~/.enxitry").expanduser()
     config_path: Path = data_dir / "config.toml"
 
+    log_path: Path = data_dir / "log/enxitry.log"
+    log_rotation: str = "04:00"
+    log_retention: str = "1 month"
+
     timezone: str = "Asia/Tokyo"
 
     gsheets_service_account_file: Path = data_dir / "gsheets-cred.json"
