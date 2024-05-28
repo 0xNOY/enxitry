@@ -29,8 +29,8 @@ class Config(BaseSettings):
 
     ocr_camera_index: int = 0
     ocr_camera_rotation: int = 0
-    delay_before_ocr: int = 5
-    ocr_timeout: int = 45
+    delay_before_ocr: int = 8
+    ocr_timeout: int = 30
     ocr_info_valid_timeout: int = 10
     size_displayed_camera_image: int = 256
 

@@ -274,7 +274,9 @@ def members() -> rx.Component:
                     "まずはカメラに学生証をかざして、学籍番号と氏名を教えてください。",
                     size="5",
                 ),
-                rx.image(src=State.camera_image, alt="カメラ画像"),
+                rx.center(
+                    rx.image(src=State.camera_image, alt="カメラ画像"),
+                ),
             ),
             open=State.is_open_register_dialog_1,
         ),
