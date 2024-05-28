@@ -29,8 +29,9 @@ class Config(BaseSettings):
 
     ocr_camera_index: int = 0
     ocr_camera_rotation: int = 0
-    ocr_timeout: int = 30
-    ocr_info_valid_timeout: int = 8
+    delay_before_ocr: int = 5
+    ocr_timeout: int = 45
+    ocr_info_valid_timeout: int = 10
 
     registration_completion_display_time: int = 5
 
