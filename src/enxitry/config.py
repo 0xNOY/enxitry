@@ -12,6 +12,8 @@ class Config(BaseSettings):
     data_dir: Path = Path("~/.enxitry").expanduser()
     config_path: Path = data_dir / "config.toml"
 
+    reflex_timeout: int = 500
+
     log_path: Path = data_dir / "log/enxitry.log"
     log_rotation: str = "04:00"
     log_retention: str = "1 month"

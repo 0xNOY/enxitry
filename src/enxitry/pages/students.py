@@ -47,7 +47,7 @@ class State(rx.State):
     recognized_info: list[list[str]]
     ocr_info_valid_time_prog: int = 0
 
-    def _update_table(self):
+    async def _update_table(self):
         df = DefaultStudentsTable().get_all_as_df()
         df = df[df["status"] == StudentStatus.ENTERED]
         df.drop(["idm", "status"], axis=1, inplace=True)
@@ -65,7 +65,7 @@ class State(rx.State):
         watcher_cls = background_session_id
 
         while watcher_cls == background_session_id:
-            df = self._update_table()
+            df = await self._update_table()
             async with self:
                 self.students = df
 
@@ -199,7 +199,7 @@ class State(rx.State):
             ]
         )
 
-        df = self._update_table()
+        df = await self._update_table()
         async with self:
             self.students = df
 
